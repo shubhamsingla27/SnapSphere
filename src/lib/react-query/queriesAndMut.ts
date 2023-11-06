@@ -16,6 +16,11 @@ import {
   deleteSavedPost,
   likePost,
   getCurrentUser,
+  getPostById,
+  deletePost,
+  getUserPosts,
+  getInfinitePosts,
+  searchPosts,
 } from "../appwrite/api";
 import { INewUser, INewPost, IUpdatePost } from "@/types";
 import { QUERY_KEYS } from "@/lib/react-query/queryKeys";
@@ -39,6 +44,43 @@ export const useSignOutAccount = () => {
   });
 };
 
+// ============================================================
+// POST QUERIES
+// ============================================================
+
+export const useGetPosts = () => {
+  return useInfiniteQuery({
+    queryKey: [QUERY_KEYS.GET_INFINITE_POSTS],
+    queryFn: getInfinitePosts,
+    getNextPageParam: (lastPage) => {
+      // If there's no data, there are no more pages.
+      if (lastPage && lastPage.documents.length === 0) {
+        return null;
+      }
+
+      // Use the $id of the last document as the cursor.
+      const lastId = lastPage.documents[lastPage.documents.length - 1].$id;
+      return lastId;
+    },
+  });
+};
+
+export const useSearchPosts = (searchTerm: string) => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.SEARCH_POSTS, searchTerm],
+    queryFn: () => searchPosts(searchTerm),
+    enabled: !!searchTerm,
+  });
+};
+
+export const useGetUserPosts = (userId?: string) => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.GET_USER_POSTS, userId],
+    queryFn: () => getUserPosts(userId),
+    enabled: !!userId,
+  });
+};
+
 export const useCreatePost = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -58,6 +100,19 @@ export const useUpdatePost = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.GET_POST_BY_ID, data?.$id],
+      });
+    },
+  });
+};
+
+export const useDeletePost = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ postId, imageId }: { postId?: string; imageId: string }) =>
+      deletePost(postId, imageId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_RECENT_POSTS],
       });
     },
   });
@@ -110,6 +165,14 @@ export const useGetUsers = (limit?: number) => {
 //     },
 //   });
 // };
+
+export const useGetPostById = (postId?: string) => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.GET_POST_BY_ID, postId],
+    queryFn: () => getPostById(postId),
+    enabled: !!postId,
+  });
+};
 
 export const useLikePost = () => {
   const queryClient = useQueryClient();
