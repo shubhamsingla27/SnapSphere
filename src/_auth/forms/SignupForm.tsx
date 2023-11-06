@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
@@ -29,7 +29,7 @@ const SignupForm = () => {
 
   const { mutateAsync: createUserAccount, isPending: isCreatingUser } =
     useCreateUserAccount();
-  const { mutateAsync: signInAccount, isPending: isSigningIn } =
+  const { mutateAsync: signInAccount, isPending: isSigningInUser } =
     useSignInAccount();
 
   // 1. Define your form.
@@ -62,9 +62,9 @@ const SignupForm = () => {
         title: "Something went wrong. Please login your new account",
       });
 
-      // navigate("/signin");
+      navigate("/signin");
 
-      // return;
+      return;
     }
 
     const isLoggedIn = await checkAuthUser();
@@ -144,7 +144,7 @@ const SignupForm = () => {
             )}
           />
           <Button type="submit" className="shad-button_primary">
-            {isCreatingUser ? (
+            {isCreatingUser || isSigningInUser || isUserLoading ? (
               <div className="flex-center gap-2">
                 <Loader />
                 Loading...
